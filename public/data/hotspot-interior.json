@@ -1,0 +1,6 @@
+{
+  "area": "interior",
+  "hotspots": [
+    { "id": "ruang-bersama", "title": "Ruang bersama", "description": "Contoh hotspot. Ganti dengan penjelasan ruang bersama.", "position": [0, 3.2, -5] }
+  ]
+}

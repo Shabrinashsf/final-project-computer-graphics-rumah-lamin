@@ -1,54 +1,50 @@
-// Assembly checker (Node, no browser). Run: npm run check
-// Exit code 0 when the assembly passes, 1 otherwise.
+// Checks the area models the app loads (public/model/<area>.glb), no browser. Run: npm run check
+// Every top-level node of a model is one instance. Exit code 0 when everything passes.
+// Works for models made by build-models.mjs and for GLBs exported by hand (e.g. from Blender).
 import fs from 'node:fs';
 import path from 'node:path';
-import { readGLB } from './lib/glb-reader.mjs';
-import { solveAssembly } from '../src/assembly/solve.js';
+import { readModel } from './lib/glb-reader.mjs';
 import { checkAssembly } from '../src/assembly/check.js';
+import { loadManifest, MODEL_DIR } from './build-models.mjs';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
 const MAX_OVERLAPS = 30;
-
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/assembly/manifest.json'), 'utf8'));
+const manifest = loadManifest();
 
 let errorCount = 0;
-const anchorsByComponent = {};
+const instances = [];
 const parts = {};
+const placeholder = new Map();
 
-// 1. Load component GLBs; a broken component is reported and skipped, the rest still checked.
-for (const [name, comp] of Object.entries(manifest.components)) {
-  const rel = `public/${comp.src}`;
-  const file = path.join(ROOT, rel);
+for (const area of manifest.areas) {
+  const rel = `public/model/${area}.glb`;
+  const file = path.join(MODEL_DIR, `${area}.glb`);
   if (!fs.existsSync(file)) {
-    console.log(`ERROR missing component "${name}": ${rel} not found`);
+    console.log(`ERROR missing model "${area}": ${rel} not found (run npm run build:models)`);
     errorCount++;
     continue;
   }
   try {
-    const glb = readGLB(file);
-    parts[name] = glb;
-    anchorsByComponent[name] = glb.anchors;
+    for (const inst of readModel(file)) {
+      if (parts[inst.id]) {
+        console.log(`ERROR duplicate instance id "${inst.id}" in ${rel}`);
+        errorCount++;
+        continue;
+      }
+      parts[inst.id] = { anchors: inst.anchors, meshes: inst.meshes };
+      instances.push({ id: inst.id, component: inst.id, matrix: inst.matrix });
+      placeholder.set(inst.id, Boolean(inst.extras.placeholder));
+    }
   } catch (e) {
-    console.log(`ERROR cannot read component "${name}": ${rel}: ${e.message}`);
+    console.log(`ERROR cannot read model "${area}": ${rel}: ${e.message}`);
     errorCount++;
   }
 }
 
-// 2. Solve placement and verify.
-const { instances, errors: solverErrors } = solveAssembly(manifest, anchorsByComponent);
 const report = checkAssembly({ instances, parts, manifest });
-
-const placeholderById = new Map(
-  instances.map((i) => [i.id, Boolean(manifest.components[i.component]?.placeholder)]),
-);
 // Overlap refs look like "instanceId/meshName"; instance ids never contain '/'.
-const tag = (ref) => (placeholderById.get(ref.slice(0, ref.indexOf('/'))) ? ' [placeholder]' : '');
+const tag = (ref) => (placeholder.get(ref.slice(0, ref.indexOf('/'))) ? ' [placeholder]' : '');
 
 console.log(`Instances: ${instances.length}`);
-
-console.log(`Solver errors: ${solverErrors.length}`);
-for (const e of solverErrors) console.log(`  ${e}`);
-errorCount += solverErrors.length;
 
 console.log(`Ground contact errors: ${report.groundErrors.length}`);
 for (const g of report.groundErrors) {

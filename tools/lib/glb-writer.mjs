@@ -1,11 +1,11 @@
 // Minimal GLB writer for Node. Converts a three.js Object3D tree into a binary glTF file.
 // Supports: node hierarchy + TRS, meshes (one material each), PBR base colour,
-// embedded PNG textures (material.userData.texture = '<file>.png' in assets/textures).
+// embedded PNG/JPEG textures (material.userData.texture = '<area>/<file>' in public/textures).
 import fs from 'node:fs';
 import path from 'node:path';
 import * as THREE from 'three';
 
-const TEXTURE_DIR = path.resolve(import.meta.dirname, '../../assets/textures');
+const TEXTURE_DIR = path.resolve(import.meta.dirname, '../../public/textures');
 
 const FLOAT = 5126;
 const UINT16 = 5123;
@@ -71,7 +71,8 @@ export function writeGLB(outPath, root) {
     json.textures ??= [];
     json.samplers ??= [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }];
     const view = pushBytes(new Uint8Array(bytes));
-    json.images.push({ name: file, bufferView: view, mimeType: 'image/png' });
+    const mimeType = /\.jpe?g$/i.test(file) ? 'image/jpeg' : 'image/png';
+    json.images.push({ name: file, bufferView: view, mimeType });
     json.textures.push({ sampler: 0, source: json.images.length - 1 });
     const idx = json.textures.length - 1;
     textureIndex.set(file, idx);

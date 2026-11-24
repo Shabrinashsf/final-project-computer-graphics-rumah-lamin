@@ -8,6 +8,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { assemble } from './viewer/assemble.js';
 import { makeAnchorHelpers, makeColliderHelpers, preparePlaceholderMaterials, setHighlight } from './viewer/debug.js';
 import { runCheck } from './viewer/report.js';
+import { loadHotspots, makeHotspotMarkers, pickHotspot } from './viewer/hotspots.js';
 import { PLAYER, createPlayerState, stepPlayer } from './walk/collision.js';
 
 const app = document.getElementById('app');
@@ -80,9 +81,30 @@ function setMode(walk) {
   crosshair.hidden = !walk;
 }
 
-renderer.domElement.addEventListener('click', () => {
-  if (walking && !pointer.isLocked) pointer.lock();
+const hotspotEl = $('hotspot');
+let hotspotGroup = null;
+renderer.domElement.addEventListener('click', (e) => {
+  if (walking) {
+    if (!pointer.isLocked) pointer.lock();
+    return;
+  }
+  const h = hotspotGroup?.visible ? pickHotspot(e, renderer.domElement, camera, hotspotGroup) : null;
+  showHotspot(h);
 });
+
+function showHotspot(h) {
+  hotspotEl.hidden = !h;
+  if (!h) return;
+  hotspotEl.textContent = '';
+  const t = document.createElement('strong');
+  t.textContent = h.title ?? h.id;
+  const area = document.createElement('div');
+  area.className = 'dim';
+  area.textContent = h.area;
+  const d = document.createElement('p');
+  d.textContent = h.description ?? '';
+  hotspotEl.append(t, area, d);
+}
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyF' && !e.repeat) { setMode(!walking); return; }
   if (walking) {
@@ -136,6 +158,10 @@ async function load() {
     anchors: makeAnchorHelpers(asm.instanceGroups, asm.parts),
   };
   scene.add(helpers.colliders, helpers.anchors);
+  const hs = await loadHotspots(asm.manifest.areas);
+  asm.loadErrors.push(...hs.errors);
+  hotspotGroup = makeHotspotMarkers(hs.hotspots);
+  scene.add(hotspotGroup);
   runCheck(asm, checkEl);
   applyOptions();
 }
@@ -145,9 +171,11 @@ function applyOptions() {
   placeholderGroups.forEach((g) => (g.visible = showPh));
   if (helpers.colliders) helpers.colliders.visible = $('opt-colliders').checked;
   if (helpers.anchors) helpers.anchors.visible = $('opt-anchors').checked;
+  if (hotspotGroup) hotspotGroup.visible = $('opt-hotspots').checked;
+  if (!$('opt-hotspots').checked) showHotspot(null);
   setHighlight(highlightEntries, $('opt-highlight').checked);
 }
-['opt-placeholders', 'opt-colliders', 'opt-anchors', 'opt-highlight'].forEach((id) => {
+['opt-placeholders', 'opt-hotspots', 'opt-colliders', 'opt-anchors', 'opt-highlight'].forEach((id) => {
   $(id).addEventListener('change', () => {
     applyOptions();
     $(id).blur(); // keep F / Space going to the page

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-// ---- Materials (one shared instance per name; textures live in assets/textures) ----
+// ---- Materials (one shared instance per name; textures live in public/textures/<area>) ----
 function mat(name, texture, color = 0xffffff, roughness = 0.9) {
   const m = new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0 });
   if (texture) m.userData.texture = texture;
@@ -10,11 +10,14 @@ function mat(name, texture, color = 0xffffff, roughness = 0.9) {
 }
 
 export const MAT = {
-  kayuGelap: mat('Kayu_Gelap', 'kayu_gelap.png'),
-  kayuUlin: mat('Kayu_Ulin', 'kayu_ulin.png'),
-  motifGelap: mat('Motif_Gelap', 'motif_gelap.png', 0xffffff, 0.8),
-  motifTerang: mat('Motif_Terang', 'motif_terang.png', 0xffffff, 0.8),
-  tanah: mat('Tanah', 'tanah.png', 0xffffff, 1),
+  kayuGelap: mat('Kayu_Gelap', 'eksterior/kayu_gelap.png'),
+  kayuUlin: mat('Kayu_Ulin', 'eksterior/kayu_ulin.png'),
+  motifGelap: mat('Motif_Gelap', 'atap/motif_gelap.png', 0xffffff, 0.8),
+  motifTerang: mat('Motif_Terang', 'interior/motif_terang.png', 0xffffff, 0.8),
+  tanah: mat('Tanah', 'props/tanah.png', 0xffffff, 1),
+  motifUsei: mat('Motif_Usei', 'eksterior/motif_usei.jpg', 0xffffff, 0.8),   // front wall, veranda side
+  motifDalam: mat('Motif_Dalam', 'interior/motif_dalam.jpg', 0xffffff, 0.8), // walls inside tilong/amin/atang
+  motifPagar: mat('Motif_Pagar', 'eksterior/motif_pagar.png', 0xffffff, 0.8), // veranda railing panels
   whitebox: mat('Whitebox', null, 0xbfbfbf, 1),
   collider: mat('Collider', null, 0xff00ff, 1),
 };
@@ -100,4 +103,56 @@ export function group(name, ...children) {
   g.name = name;
   for (const c of children.flat()) g.add(c);
   return g;
+}
+
+// Flat textured panel on one face of a wall, with UVs in wall coordinates so a motif runs on
+// continuously across separate pieces. axis 'z': panel in the X-Y plane at z = c, spanning
+// a0..a1 along x. axis 'x': panel in the Z-Y plane at x = c, spanning a0..a1 along z.
+// facing: +1 / -1 along the axis. tile: { u, v } metres per image repeat.
+export function facePanel(name, material, axis, c, a0, a1, y0, y1, facing, tile) {
+  const P = axis === 'z'
+    ? (a, y) => [a, y, c]
+    : (a, y) => [c, y, a];
+  const pts = [P(a0, y0), P(a1, y0), P(a1, y1), P(a0, y1)];
+  // u runs left-to-right as seen by a viewer looking at the face.
+  const uSign = axis === 'z' ? facing : -facing;
+  const uv = [[a0, y0], [a1, y0], [a1, y1], [a0, y1]].flatMap(([a, y]) => [(uSign * a) / tile.u, 1 - y / tile.v]);
+  const normal = axis === 'z' ? [0, 0, facing] : [facing, 0, 0];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts.flat()), 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([...normal, ...normal, ...normal, ...normal]), 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uv), 2));
+  // pick the winding whose face normal points along `facing`
+  const e1 = new THREE.Vector3(...pts[1]).sub(new THREE.Vector3(...pts[0]));
+  const e2 = new THREE.Vector3(...pts[2]).sub(new THREE.Vector3(...pts[0]));
+  const n = e1.cross(e2);
+  const ok = (axis === 'z' ? n.z : n.x) * facing > 0;
+  g.setIndex(ok ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]);
+  const m = new THREE.Mesh(g, material);
+  m.name = name;
+  return m;
+}
+
+// Straight beam between two points, w wide and h deep. Works for beams in the Y-Z plane
+// (x0 == x1) and in the X-Y plane (z0 == z1). With `hang`, the beam hangs below the line
+// (its top face lies on p0-p1), which is how rafters sit under a roof surface.
+export function beam(name, material, p0, p1, w, h, hang = false) {
+  const a = new THREE.Vector3(...p0), b = new THREE.Vector3(...p1);
+  const d = b.clone().sub(a);
+  const len = d.length();
+  const inYZ = Math.abs(d.x) < 1e-9;
+  if (hang) {
+    const n = inYZ ? new THREE.Vector3(0, -d.z, d.y) : new THREE.Vector3(-d.y, d.x, 0);
+    n.normalize();
+    if (n.y > 0) n.negate();
+    a.addScaledVector(n, h / 2);
+    b.addScaledVector(n, h / 2);
+  }
+  const g = inYZ ? new THREE.BoxGeometry(w, h, len) : new THREE.BoxGeometry(len, h, w);
+  const m = new THREE.Mesh(meterUVs(g), material);
+  m.name = name;
+  m.position.copy(a).add(b).multiplyScalar(0.5);
+  if (inYZ) m.rotation.x = Math.atan2(-d.y, d.z);
+  else m.rotation.z = Math.atan2(d.y, d.x);
+  return m;
 }

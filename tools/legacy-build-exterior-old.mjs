@@ -1,5 +1,5 @@
 // LEGACY: generates the OLD exterior layout (deck y 2.6, x ±18.4, three stairs).
-// The GLBs in public/components/exterior/ now come from the newer exterior model (deck y 1.8,
+// The parts in parts/eksterior/ now come from the newer exterior model (deck y 1.8,
 // x ±15, atang annex, two stairs) and are the source of truth. Running this overwrites them,
 // so it is no longer part of `npm run gen`.
 // Generates the exterior components of the Rumah Lamin (see docs/contract.md).
@@ -8,7 +8,7 @@ import path from 'node:path';
 import { MAT, box, boxFromMin, cylinder, collider, anchor, merge, group } from './lib/geom.mjs';
 import { writeGLB } from './lib/glb-writer.mjs';
 
-const OUT = path.resolve(import.meta.dirname, '../public/components/exterior');
+const OUT = path.resolve(import.meta.dirname, '../parts/_legacy-exterior'); // never overwrite the real parts
 fs.mkdirSync(OUT, { recursive: true });
 const f2 = (n) => String(n).padStart(2, '0');
 

@@ -95,7 +95,7 @@ test('texture image embedded once even when used by 2 meshes', () => {
   assert.equal(json.textures.length, 1);
   assert.equal(json.images[0].mimeType, 'image/png');
   assert.equal(json.materials.filter((m) => m.pbrMetallicRoughness.baseColorTexture).length, 1);
-  const png = fs.readFileSync(path.resolve(import.meta.dirname, '../assets/textures/kayu_ulin.png'));
+  const png = fs.readFileSync(path.resolve(import.meta.dirname, '../public/textures/eksterior/kayu_ulin.png'));
   assert.equal(json.bufferViews[json.images[0].bufferView].byteLength, png.length);
 });
 

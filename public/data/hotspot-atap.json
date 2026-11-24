@@ -1,0 +1,6 @@
+{
+  "area": "atap",
+  "hotspots": [
+    { "id": "bubungan", "title": "Bubungan", "description": "Contoh hotspot. Ganti dengan penjelasan ornamen bubungan.", "position": [0, 10, -5] }
+  ]
+}

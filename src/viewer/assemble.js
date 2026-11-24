@@ -1,24 +1,23 @@
-// Loads component GLBs once, solves the anchor assembly, and builds the instance groups.
-import { Box3, Group } from 'three';
+// Loads the area models (public/model/<area>.glb). Every top-level node of a model is one
+// instance; its extras ({ component, placeholder }) end up in userData via GLTFLoader.
+import { Box3, Group, Matrix4 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import manifest from '../assembly/manifest.json';
-import { solveAssembly } from '../assembly/solve.js';
 
-function analyse(scene) {
-  scene.updateMatrixWorld(true);
+// Anchors and mesh bounds of one instance, relative to the instance node.
+function analyse(inst) {
+  inst.updateMatrixWorld(true);
+  const toLocal = new Matrix4().copy(inst.matrixWorld).invert();
   const anchors = {};
   const meshes = [];
-  scene.traverse((node) => {
-    if (node.name && node.name.startsWith('anchor_')) anchors[node.name] = node.matrixWorld.clone();
+  inst.traverse((node) => {
+    if (node === inst) return;
+    const m = toLocal.clone().multiply(node.matrixWorld);
+    if (node.name && node.name.startsWith('anchor_')) anchors[node.name] = m;
     if (node.isMesh) {
       const g = node.geometry;
       if (!g.boundingBox) g.computeBoundingBox();
-      meshes.push({
-        name: node.name,
-        matrix: node.matrixWorld.clone(),
-        min: g.boundingBox.min.toArray(),
-        max: g.boundingBox.max.toArray(),
-      });
+      meshes.push({ name: node.name, matrix: m, min: g.boundingBox.min.toArray(), max: g.boundingBox.max.toArray() });
     }
   });
   return { anchors, meshes };
@@ -27,39 +26,40 @@ function analyse(scene) {
 export async function assemble() {
   const loader = new GLTFLoader();
   const loadErrors = [];
-  const scenes = {};
+  const root = new Group();
+  root.name = 'rumah_lamin';
+  const instanceGroups = [];
+  const instances = [];
   const parts = {};
 
-  await Promise.all(
-    Object.entries(manifest.components).map(async ([name, def]) => {
+  const scenes = await Promise.all(
+    manifest.areas.map(async (area) => {
+      const src = `model/${area}.glb`;
       try {
-        const gltf = await loader.loadAsync(import.meta.env.BASE_URL + def.src);
-        scenes[name] = gltf.scene;
-        parts[name] = analyse(gltf.scene);
+        return { area, scene: (await loader.loadAsync(import.meta.env.BASE_URL + src)).scene };
       } catch (e) {
-        loadErrors.push(`${name} (${def.src}): ${e?.message ?? e}`);
+        loadErrors.push(`${area} (${src}): ${e?.message ?? e}`);
+        return null;
       }
     }),
   );
 
-  const anchorsByComponent = {};
-  for (const [name, p] of Object.entries(parts)) anchorsByComponent[name] = p.anchors;
-  const solved = solveAssembly(manifest, anchorsByComponent);
-
-  const root = new Group();
-  root.name = 'house';
-  const instanceGroups = [];
-  for (const inst of solved.instances) {
-    const g = new Group();
-    g.name = inst.id;
-    g.matrixAutoUpdate = false;
-    g.matrix.copy(inst.matrix);
-    g.userData = { id: inst.id, component: inst.component, placeholder: !!manifest.components[inst.component]?.placeholder };
-    g.add(scenes[inst.component].clone(true));
-    root.add(g);
-    instanceGroups.push(g);
+  for (const s of scenes) {
+    if (!s) continue;
+    s.scene.name = s.area;
+    root.add(s.scene);
+    for (const inst of [...s.scene.children]) {
+      inst.userData = { ...inst.userData, id: inst.name, area: s.area, placeholder: !!inst.userData.placeholder };
+      instanceGroups.push(inst);
+    }
   }
   root.updateMatrixWorld(true);
+
+  for (const inst of instanceGroups) {
+    parts[inst.name] = analyse(inst);
+    instances.push({ id: inst.name, component: inst.name, matrix: inst.matrixWorld.clone() });
+    inst.userData.component = inst.name;
+  }
 
   // col_* meshes: hidden, world boxes collected for walking. Everything else casts/receives shadows.
   const colliders = [];
@@ -75,5 +75,5 @@ export async function assemble() {
     }
   });
 
-  return { manifest, root, instanceGroups, instances: solved.instances, solveErrors: solved.errors, parts, colliders, loadErrors };
+  return { manifest, root, instanceGroups, instances, solveErrors: [], parts, colliders, loadErrors };
 }

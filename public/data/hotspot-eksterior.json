@@ -1,0 +1,6 @@
+{
+  "area": "eksterior",
+  "hotspots": [
+    { "id": "tangga-kiri", "title": "Tangga kiri", "description": "Contoh hotspot. Ganti dengan penjelasan tangga takik.", "position": [-6.25, 1.2, 9.2] }
+  ]
+}
