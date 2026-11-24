@@ -1,0 +1,31 @@
+{
+  "components": {
+    "tanah": { "src": "components/exterior/tanah.glb" },
+    "lantai": { "src": "components/exterior/lantai.glb" },
+    "tiang": { "src": "components/exterior/tiang.glb" },
+    "dinding": { "src": "components/exterior/dinding.glb" },
+    "pagar": { "src": "components/exterior/pagar.glb" },
+    "tangga": { "src": "components/exterior/tangga.glb" },
+    "atap": { "src": "components/placeholder/atap.glb", "placeholder": true },
+    "atap_atang": { "src": "components/placeholder/atap_atang.glb", "placeholder": true },
+    "atap_usei": { "src": "components/placeholder/atap_usei.glb", "placeholder": true }
+  },
+  "instances": [
+    { "id": "tanah", "component": "tanah" },
+    { "id": "lantai", "component": "lantai", "attach": { "anchor": "anchor_base", "to": "tanah.anchor_house" } },
+    { "id": "tiang", "component": "tiang", "attach": { "anchor": "anchor_top", "to": "lantai.anchor_tiang_*" } },
+    { "id": "dinding", "component": "dinding", "attach": { "anchor": "anchor_base", "to": "lantai.anchor_dinding" } },
+    { "id": "pagar", "component": "pagar", "attach": { "anchor": "anchor_base", "to": "lantai.anchor_pagar" } },
+    { "id": "tangga_kiri", "component": "tangga", "attach": { "anchor": "anchor_top", "to": "lantai.anchor_tangga_kiri" } },
+    { "id": "tangga_kanan", "component": "tangga", "attach": { "anchor": "anchor_top", "to": "lantai.anchor_tangga_kanan" } },
+    { "id": "atap", "component": "atap", "attach": { "anchor": "anchor_base", "to": "dinding.anchor_atap" } },
+    { "id": "atap_atang", "component": "atap_atang", "attach": { "anchor": "anchor_base", "to": "dinding.anchor_atap_atang_0" } },
+    { "id": "atap_usei", "component": "atap_usei", "attach": { "anchor": "anchor_base", "to": "pagar.anchor_atap_usei" } }
+  ],
+  "allowOverlap": [
+    ["atap*", "atap*"],
+    ["tangga_*", "tanah"],
+    ["tangga_*", "lantai"],
+    ["tangga_*", "pagar"]
+  ]
+}
