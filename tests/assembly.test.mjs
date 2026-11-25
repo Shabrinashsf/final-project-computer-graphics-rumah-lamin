@@ -41,6 +41,7 @@ const REQUIRED = {
     anchor_tangga_kiri: [-6.25, 0, 7], anchor_tangga_kanan: [6.25, 0, 7],
   },
   tiang: { anchor_ground: [0, 0, 0], anchor_top: [0, 1.6, 0] },
+  tiang_ukir: { anchor_ground: [0, 0, 0], anchor_top: [0, 1.6, 0] },
   dinding_luar: { anchor_base: [0, 0, 0], anchor_rangka: [0, 3.5, 0] },
   dinding_dalam: { anchor_base: [0, 0, 0] },
   tiang_dalam: { anchor_base: [0, 0, 0] },
@@ -75,7 +76,8 @@ for (const [comp, anchors] of Object.entries(REQUIRED)) {
 }
 
 test('contract: lantai has 84 pillar anchors (13 x 6 main grid + 3 x 2 atang) at y = -0.2', () => {
-  const pillars = Object.entries(parts.lantai.anchors).filter(([n]) => n.startsWith('anchor_tiang_')).map(([, m]) => pos(m));
+  const isPillar = (n) => n.startsWith('anchor_tiang_') || n.startsWith('anchor_ukir_');
+  const pillars = Object.entries(parts.lantai.anchors).filter(([n]) => isPillar(n)).map(([, m]) => pos(m));
   assert.equal(pillars.length, 84);
   for (const p of pillars) near(p.y, -0.2, 'pillar anchor y');
   const main = pillars.filter((p) => p.z >= -10 - EPS);
@@ -87,8 +89,16 @@ test('contract: lantai has 84 pillar anchors (13 x 6 main grid + 3 x 2 atang) at
   assert.deepEqual([...new Set(atang.map((p) => p.z.toFixed(2)))].map(Number).sort((a, b) => a - b), [-15, -12.5]);
 });
 
+test('contract: the front row (z 6.8) is carved (anchor_ukir_*), every other pillar is plain', () => {
+  for (const [n, m] of Object.entries(parts.lantai.anchors)) {
+    if (n.startsWith('anchor_ukir_')) near(pos(m).z, 6.8, `${n} z`);
+    if (n.startsWith('anchor_tiang_')) assert.ok(pos(m).z < 6.8 - EPS, `${n} is on the front row`);
+  }
+  assert.equal(Object.keys(parts.lantai.anchors).filter((n) => n.startsWith('anchor_ukir_')).length, 13);
+});
+
 test('contract: walkable components have col_ colliders', () => {
-  for (const comp of ['tanah', 'lantai', 'tiang', 'dinding_luar', 'dinding_dalam', 'tiang_dalam', 'pagar', 'tiang_usei', 'tangga']) {
+  for (const comp of ['tanah', 'lantai', 'tiang', 'tiang_ukir', 'dinding_luar', 'dinding_dalam', 'tiang_dalam', 'pagar', 'tiang_usei', 'tangga']) {
     assert.ok(parts[comp].meshes.some((m) => m.name.startsWith('col_')), `${comp} has no col_ mesh`);
   }
 });
@@ -97,7 +107,8 @@ test('contract: walkable components have col_ colliders', () => {
 test('assembly: solves 103 instances (15 + 84 pillars + 4 statues) without errors', () => {
   assert.deepEqual(solved.errors, []);
   assert.equal(solved.instances.length, 103);
-  assert.equal(solved.instances.filter((i) => i.component === 'tiang').length, 84);
+  assert.equal(solved.instances.filter((i) => i.component === 'tiang').length, 71);
+  assert.equal(solved.instances.filter((i) => i.component === 'tiang_ukir').length, 13);
 });
 
 test('assembly: check passes (ground contact + no overlaps > 1 cm)', () => {
@@ -116,7 +127,7 @@ test('world: deck slab y 1.6..1.8, x ±15.2, z -15.2..7.0', () => {
 });
 
 test('world: every pillar spans ground (0) to deck bottom (1.6)', () => {
-  for (const inst of solved.instances.filter((i) => i.component === 'tiang')) {
+  for (const inst of solved.instances.filter((i) => i.component === 'tiang' || i.component === 'tiang_ukir')) {
     const b = bounds(inst.id);
     near(b.min.y, 0, `${inst.id} bottom`);
     near(b.max.y, 1.6, `${inst.id} top`);

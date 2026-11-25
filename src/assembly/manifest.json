@@ -3,6 +3,7 @@
   "components": {
     "lantai": { "src": "eksterior/lantai.glb" },
     "tiang": { "src": "eksterior/tiang.glb" },
+    "tiang_ukir": { "src": "eksterior/tiang_ukir.glb" },
     "dinding_luar": { "src": "eksterior/dinding_luar.glb" },
     "pagar": { "src": "eksterior/pagar.glb" },
     "tiang_usei": { "src": "eksterior/tiang_usei.glb" },
@@ -21,6 +22,7 @@
     { "id": "tanah", "component": "tanah" },
     { "id": "lantai", "component": "lantai", "attach": { "anchor": "anchor_base", "to": "tanah.anchor_house" } },
     { "id": "tiang", "component": "tiang", "attach": { "anchor": "anchor_top", "to": "lantai.anchor_tiang_*" } },
+    { "id": "tiang_ukir", "component": "tiang_ukir", "attach": { "anchor": "anchor_top", "to": "lantai.anchor_ukir_*" } },
     { "id": "dinding_luar", "component": "dinding_luar", "attach": { "anchor": "anchor_base", "to": "lantai.anchor_dinding" } },
     { "id": "dinding_dalam", "component": "dinding_dalam", "attach": { "anchor": "anchor_base", "to": "lantai.anchor_dinding" } },
     { "id": "tiang_dalam", "component": "tiang_dalam", "attach": { "anchor": "anchor_base", "to": "lantai.anchor_interior" } },

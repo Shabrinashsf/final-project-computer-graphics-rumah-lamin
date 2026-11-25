@@ -35,11 +35,12 @@ Parts per area (`src/assembly/manifest.json`):
 | Area | Part | File | Made by |
 |---|---|---|---|
 | eksterior | lantai (deck slab, anchors) | `parts/eksterior/lantai.glb` | `npm run gen:eksterior` |
-| eksterior | tiang (pillar, ×84) | `parts/eksterior/tiang.glb` | delivered model |
+| eksterior | tiang (plain pillar, ×71) | `parts/eksterior/tiang.glb` | `npm run gen:eksterior` |
+| eksterior | tiang_ukir (carved figure pillar, front row, ×13) | `parts/eksterior/tiang_ukir.glb` | `npm run gen:eksterior` |
 | eksterior | dinding_luar (outer walls, doors, windows) | `parts/eksterior/dinding_luar.glb` | `npm run gen:eksterior` |
 | eksterior | pagar (usei railing) | `parts/eksterior/pagar.glb` | `npm run gen:eksterior` |
 | eksterior | tiang_usei (13 round usei posts) | `parts/eksterior/tiang_usei.glb` | `npm run gen:eksterior` |
-| eksterior | tangga (staircase, ×2) | `parts/eksterior/tangga.glb` | delivered model |
+| eksterior | tangga (notched-log staircase, ×2) | `parts/eksterior/tangga.glb` | `npm run gen:eksterior` |
 | interior | dinding_dalam (inner walls at x = ±7) | `parts/interior/dinding_dalam.glb` | `npm run gen:interior` |
 | interior | tiang_dalam (6 round posts carrying the frame) | `parts/interior/tiang_dalam.glb` | `npm run gen:interior` |
 | interior | rangka (roof frames: main, atang, usei) | `parts/interior/rangka.glb` | `npm run gen:interior` |
@@ -64,8 +65,9 @@ Two ways to deliver an area:
    `npm run build:models` overwrites your file.
 
 `npm run gen` regenerates every generated part (exterior, interior, roof and statue placeholders) and then
-the four models. `tiang.glb`, `tangga.glb` and `tanah.glb` are delivered models and are never
-overwritten. `tools/legacy/exterior-v1.mjs` is the generator of the very first layout
+the four models. `tanah.glb` is a delivered model and is never overwritten. The exterior
+generator is split per part: `tools/generate/eksterior.mjs` (deck, walls, railing, usei posts),
+`eksterior-tiang.mjs` (plain and carved pillars) and `eksterior-tangga.mjs` (stairs). `tools/legacy/exterior-v1.mjs` is the generator of the very first layout
 and is kept for reference only.
 
 ### Textures
@@ -141,8 +143,9 @@ All coordinates are in the component's own local space.
 | Component | Local origin | Anchors |
 |---|---|---|
 | tanah | world origin | `anchor_house` (0, 0, 0) |
-| lantai | floor-top centre, front wall line | `anchor_base` (0, -1.8, 0) · `anchor_tiang_00…83` pillar tops at y = -0.2 (13 × 6 grid at x = -15 … 15 step 2.5, z = -10, -5, 0, 2.5, 5, 6.8, plus atang 3 × 2 at x = -2.5, 0, 2.5, z = -12.5, -15) · `anchor_dinding` (0, 0, 0) · `anchor_pagar` (0, 0, 7) · `anchor_interior` (0, 0, 0) · `anchor_tangga_kiri` (-6.25, 0, 7) · `anchor_tangga_kanan` (6.25, 0, 7) |
-| tiang | bottom centre | `anchor_ground` (0, 0, 0) · `anchor_top` (0, 1.6, 0) |
+| lantai | floor-top centre, front wall line | `anchor_base` (0, -1.8, 0) · pillar tops at y = -0.2: `anchor_tiang_00…70` plain (13 × 5 grid at x = -15 … 15 step 2.5, z = -10, -5, 0, 2.5, 5, plus atang 3 × 2 at x = -2.5, 0, 2.5, z = -12.5, -15) and `anchor_ukir_00…12` carved (front row, z = 6.8) · `anchor_dinding` (0, 0, 0) · `anchor_pagar` (0, 0, 7) · `anchor_interior` (0, 0, 0) · `anchor_tangga_kiri` (-6.25, 0, 7) · `anchor_tangga_kanan` (6.25, 0, 7) |
+| tiang | bottom centre | `anchor_ground` (0, 0, 0) · `anchor_top` (0, 1.6, 0); radius ≤ 0.2 |
+| tiang_ukir | bottom centre | `anchor_ground` (0, 0, 0) · `anchor_top` (0, 1.6, 0); radius ≤ 0.28, faces +Z |
 | dinding_luar | base centre of the front wall (floor top) | `anchor_base` (0, 0, 0) · `anchor_rangka` (0, 3.5, 0) wall top |
 | pagar | front-edge base centre | `anchor_base` (0, 0, 0) |
 | tiang_usei | same as pagar | `anchor_base` (0, 0, 0) |
@@ -167,14 +170,14 @@ childWorld = parentWorld × parentAnchor × rotY(attach.rotationY) × inverse(ch
 | Part | Extent |
 |---|---|
 | Deck slab | x ±15.2, y 1.6 … 1.8, z -10.2 … 7.0; atang deck x ±2.7, z -15.2 … -10.2 |
-| Pillars | 84, from y 0 to 1.6 |
+| Pillars | 84 (71 plain + 13 carved on the front row), from y 0 to 1.6 |
 | Walls (outer) | x ±15.06 (window frames to ±15.1), y 1.8 … 5.3 (3.5 m high), z -10.06 … 0.1; atang x ±2.56, z -15.06 … -10.06 |
 | Inner walls | `dinding_dalam` at x = ±7 (z -10 … 0, y 1.8 … 5.3), each with a 0.85 m opening at z = -5 |
 | Openings | doors at x = ±6.25 in the front wall (0.85 × 1.8); windows 0.8 × 1.2 (y 2.7 … 3.9) in the right wall at z = -2.5, -7.5 and the back wall at x = ±4.75, ±11; doorway x = 0 into the atang |
 | Interior posts | 6 round, Ø 0.26 m, at z = -5, x = ±2.5, ±10, ±12.5, y 1.8 … 5.3, with carved brackets |
 | Roof frame | wall plates y 5.3 … 5.5; trusses every 2.5 m; kasau every 0.625 m; main ridge at z -5, atang ridge along z, usei ridges at z 3.85; usei tengah frame raised 0.5 m |
 | Usei (veranda) | z 0 … 7, railing (y 1.8 … 2.94) along z ≈ 6.9 with 1.75 m gaps at x = ±6.25; side rails at x = ±15.1; 13 round posts (Ø 0.24 m) every 2.5 m at z 6.7, y 1.8 … 5.3 |
-| Stairs | 1.4 wide, at x = ±6.25 (midway between deck pillars, in front of the doors), from deck edge z = 7 out to z ≈ 10.2, top at y 1.8, foot at y 0. Handrail posts are sunk into the ground/deck (allowed overlap) |
+| Stairs | 1.4 wide, at x = ±6.25 (midway between deck pillars, in front of the doors), from deck edge z = 7 out to z ≈ 10.2, top at y 1.8, foot at y 0. 9 steps (rise 0.18, run 0.28). Visible geometry within x ±0.9 of the stair centre. Log stringers and handrail posts may rest against the deck edge and sink into the ground (allowed overlap) |
 | Statues (placeholder) | 0.7 × 5.3 × 0.7, on the ground beside each stair at x = -8.05, -4.45, 4.45, 8.05, centred on z 9.57 |
 | Roofs (placeholder) | atap x ±15.9, y 5.5 … 8.65, z -10.5 … 0.5; atap_atang x ±3.2, y 5.5 … 7.7, z -15.7 … -10; atap_usei kiri/kanan x -15.35 … -7.5 / 7.5 … 15.35, y 5.5 … 7.6; tengah x ±7.8, y 6.0 … 8.1; usei z 0.1 … 7.4 |
 

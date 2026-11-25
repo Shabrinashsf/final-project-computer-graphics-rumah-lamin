@@ -28,7 +28,10 @@ for (const area of Object.keys(EXPECTED)) {
   test(`models: ${area}.glb holds the expected instances`, () => {
     const ids = readModel(path.join(tmp, `${area}.glb`)).map((i) => i.id);
     for (const id of EXPECTED[area]) assert.ok(ids.includes(id), `${area} missing ${id}`);
-    if (area === 'eksterior') assert.equal(ids.filter((i) => /^tiang_\d+$/.test(i)).length, 84);
+    if (area === 'eksterior') {
+      assert.equal(ids.filter((i) => /^tiang_\d+$/.test(i)).length, 71);
+      assert.equal(ids.filter((i) => /^tiang_ukir_\d+$/.test(i)).length, 13);
+    }
   });
 
   test(`models: public/model/${area}.glb is up to date (run npm run build:models)`, () => {

@@ -1,6 +1,6 @@
 // Generates the exterior parts that follow the front layout of the reference Lamin:
-// lantai (deck), dinding_luar (outer walls), pagar (usei railing) and tiang_usei (usei posts).
-// tiang.glb and tangga.glb in parts/eksterior/ are delivered models and are not touched.
+// lantai (deck), tiang / tiang_ukir (deck pillars, see eksterior-tiang.mjs), dinding_luar (outer
+// walls), pagar (usei railing), tiang_usei (usei posts) and tangga (stairs, see eksterior-tangga.mjs).
 // Run: npm run gen:eksterior   (then npm run build:models)
 //
 // Layout (world, deck top y 1.8): main body x ±15, z -10..0; atang x ±2.5, z -15..-10;
@@ -9,6 +9,8 @@ import path from 'node:path';
 import { MAT, boxFromMin, cylinder, collider, anchor, merge, group } from '../lib/geom.mjs';
 import { wall } from '../lib/walls.mjs';
 import { writeGLB } from '../lib/glb-writer.mjs';
+import { tiang, tiangUkir } from './eksterior-tiang.mjs';
+import { tangga } from './eksterior-tangga.mjs';
 
 const OUT = path.resolve(import.meta.dirname, '../../parts/eksterior');
 const f2 = (n) => String(n).padStart(2, '0');
@@ -39,9 +41,12 @@ function lantai() {
     anchor('anchor_tangga_kiri', -STAIR_X, 0, 7),
     anchor('anchor_tangga_kanan', STAIR_X, 0, 7),
   ];
-  let n = 0;
-  for (const z of [-10, -5, 0, 2.5, 5, 6.8])
+  // Pillar tops at y -0.2. The front row (z 6.8, seen from the yard) gets carved figure pillars
+  // (anchor_ukir_NN); everything else is a plain pillar (anchor_tiang_NN).
+  let n = 0, u = 0;
+  for (const z of [-10, -5, 0, 2.5, 5])
     for (let c = 0; c < 13; c++) kids.push(anchor(`anchor_tiang_${f2(n++)}`, -15 + 2.5 * c, -0.2, z));
+  for (let c = 0; c < 13; c++) kids.push(anchor(`anchor_ukir_${f2(u++)}`, -15 + 2.5 * c, -0.2, 6.8));
   for (const z of [-12.5, -15])
     for (const x of [-2.5, 0, 2.5]) kids.push(anchor(`anchor_tiang_${f2(n++)}`, x, -0.2, z));
   return group('lantai', kids);
@@ -160,6 +165,9 @@ function tiangUsei() {
 }
 
 emit('lantai', lantai());
+emit('tiang', tiang());
+emit('tiang_ukir', tiangUkir());
 emit('dinding_luar', dindingLuar());
 emit('pagar', pagar());
 emit('tiang_usei', tiangUsei());
+emit('tangga', tangga());
