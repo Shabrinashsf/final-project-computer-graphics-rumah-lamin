@@ -48,6 +48,7 @@ Parts per area (`src/assembly/manifest.json`):
 | atap | atap_usei_sisi (usei roof kiri / kanan, used twice) | `parts/atap/atap_usei_sisi.glb` | whitebox placeholder |
 | atap | atap_usei_tengah (raised usei roof over the tilong) | `parts/atap/atap_usei_tengah.glb` | whitebox placeholder |
 | props | tanah (ground) | `parts/props/tanah.glb` | delivered model |
+| props | patung (Blontang statue, ×4: both sides of each stair) | `parts/props/patung.glb` | whitebox placeholder |
 
 `npm run build:models` snaps the parts together with their anchors and writes
 `public/model/<area>.glb`. Every instance becomes one top-level node, named by its id (for
@@ -62,9 +63,9 @@ Two ways to deliver an area:
    top-level node are not checked. Remove that area's parts from the manifest, or the next
    `npm run build:models` overwrites your file.
 
-`npm run gen` regenerates every generated part (exterior, interior, roof placeholders) and then
+`npm run gen` regenerates every generated part (exterior, interior, roof and statue placeholders) and then
 the four models. `tiang.glb`, `tangga.glb` and `tanah.glb` are delivered models and are never
-overwritten. `tools/legacy-build-exterior-old.mjs` is the generator of the very first layout
+overwritten. `tools/legacy/exterior-v1.mjs` is the generator of the very first layout
 and is kept for reference only.
 
 ### Textures
@@ -150,6 +151,7 @@ All coordinates are in the component's own local space.
 | atap | main roof eave line centre | `anchor_base` (0, 0, 0) |
 | atap_atang | atang roof centre | `anchor_base` (0, 0, 0) |
 | atap_usei_sisi / atap_usei_tengah | back eave centre | `anchor_base` (0, 0, 0) |
+| patung | bottom centre | `anchor_ground` (0, 0, 0) |
 | dinding_dalam | same as dinding_luar | `anchor_base` (0, 0, 0) |
 | tiang_dalam | floor-top centre | `anchor_base` (0, 0, 0) |
 
@@ -173,6 +175,7 @@ childWorld = parentWorld × parentAnchor × rotY(attach.rotationY) × inverse(ch
 | Roof frame | wall plates y 5.3 … 5.5; trusses every 2.5 m; kasau every 0.625 m; main ridge at z -5, atang ridge along z, usei ridges at z 3.85; usei tengah frame raised 0.5 m |
 | Usei (veranda) | z 0 … 7, railing (y 1.8 … 2.94) along z ≈ 6.9 with 1.75 m gaps at x = ±6.25; side rails at x = ±15.1; 13 round posts (Ø 0.24 m) every 2.5 m at z 6.7, y 1.8 … 5.3 |
 | Stairs | 1.4 wide, at x = ±6.25 (midway between deck pillars, in front of the doors), from deck edge z = 7 out to z ≈ 10.2, top at y 1.8, foot at y 0. Handrail posts are sunk into the ground/deck (allowed overlap) |
+| Statues (placeholder) | 0.7 × 5.3 × 0.7, on the ground beside each stair at x = -8.05, -4.45, 4.45, 8.05, centred on z 9.57 |
 | Roofs (placeholder) | atap x ±15.9, y 5.5 … 8.65, z -10.5 … 0.5; atap_atang x ±3.2, y 5.5 … 7.7, z -15.7 … -10; atap_usei kiri/kanan x -15.35 … -7.5 / 7.5 … 15.35, y 5.5 … 7.6; tengah x ±7.8, y 6.0 … 8.1; usei z 0.1 … 7.4 |
 
 Doorways are exactly 1.8 m high, so the walking player is 1.7 m tall (eye 1.6 m).

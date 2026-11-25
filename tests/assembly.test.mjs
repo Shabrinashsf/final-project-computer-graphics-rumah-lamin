@@ -58,6 +58,7 @@ const REQUIRED = {
   atap_atang: { anchor_base: [0, 0, 0] },
   atap_usei_sisi: { anchor_base: [0, 0, 0] },
   atap_usei_tengah: { anchor_base: [0, 0, 0] },
+  patung: { anchor_ground: [0, 0, 0] },
 };
 
 for (const [comp, anchors] of Object.entries(REQUIRED)) {
@@ -93,9 +94,9 @@ test('contract: walkable components have col_ colliders', () => {
 });
 
 // ---- Assembly ----
-test('assembly: solves 99 instances (15 + 84 pillars) without errors', () => {
+test('assembly: solves 103 instances (15 + 84 pillars + 4 statues) without errors', () => {
   assert.deepEqual(solved.errors, []);
-  assert.equal(solved.instances.length, 99);
+  assert.equal(solved.instances.length, 103);
   assert.equal(solved.instances.filter((i) => i.component === 'tiang').length, 84);
 });
 
@@ -234,4 +235,15 @@ test('walk: veranda railing stops the player walking off the deck', () => {
   const { s } = walk({ x: -10, y: 1.8, z: 3 }, { forward: -1 }, 2);
   near(s.position.y, 1.8, 'still on deck');
   assert.ok(s.position.z < 7.0, `fell off deck (z=${s.position.z})`);
+});
+
+test('world: statue placeholders stand on the ground beside both stairs', () => {
+  for (const [stair, x] of [['tangga_kiri', -6.25], ['tangga_kanan', 6.25]]) {
+    for (const [side, dx] of [['kiri', -1.8], ['kanan', 1.8]]) {
+      const b = bounds(`patung_${stair}_${side}`);
+      near(b.min.y, 0, `${stair} ${side} base`);
+      near((b.min.x + b.max.x) / 2, x + dx, `${stair} ${side} x`);
+      near((b.min.z + b.max.z) / 2, 7 + 2.57, `${stair} ${side} z`);
+    }
+  }
 });

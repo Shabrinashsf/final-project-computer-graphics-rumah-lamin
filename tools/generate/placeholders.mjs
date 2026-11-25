@@ -1,14 +1,14 @@
-// Generates the whitebox roof placeholders into parts/atap/ (then run npm run build:models).
+// Generates the whitebox placeholders: roofs into parts/atap/ and the guardian statue into
+// parts/props/ (then run npm run build:models).
 // They sit on the roof frame (parts/interior/rangka.glb) and the usei posts (pagar). The roof
-// underside follows the rafters, see tools/build-interior.mjs. Run: npm run gen:placeholder
+// underside follows the rafters, see tools/generate/interior.mjs. Run: npm run gen:placeholder
 import fs from 'node:fs';
 import path from 'node:path';
 import * as THREE from 'three';
-import { MAT, meterUVs, boxFromMin, anchor, group } from './lib/geom.mjs';
-import { writeGLB } from './lib/glb-writer.mjs';
+import { MAT, meterUVs, boxFromMin, anchor, collider, group } from '../lib/geom.mjs';
+import { writeGLB } from '../lib/glb-writer.mjs';
 
-const OUT = path.resolve(import.meta.dirname, '../parts/atap');
-fs.mkdirSync(OUT, { recursive: true });
+const PARTS = path.resolve(import.meta.dirname, '../../parts');
 const W = MAT.whitebox;
 
 // Prism along world X: `pts` are [z, y] pairs of the cross-section, extruded over x ±halfX.
@@ -56,14 +56,26 @@ function buildAtapUsei(name, halfX) {
   return group(name, anchor('anchor_base', 0, 0, 0), gable, ridge);
 }
 
+// ---- d) patung: Blontang guardian statue (props area). Origin = bottom centre; it stands on
+// the ground beside a stair, at tangga.anchor_patung_kiri / _kanan.
+function buildPatung() {
+  const post = boxFromMin('patung_tiang', W, -0.25, 0, -0.25, 0.25, 4.6, 0.25);
+  const head = boxFromMin('patung_kepala', W, -0.35, 4.6, -0.35, 0.35, 5.3, 0.35);
+  return group('patung', anchor('anchor_ground', 0, 0, 0), post, head,
+    collider('col_patung', -0.35, 0, -0.35, 0.35, 5.3, 0.35));
+}
+
 const outputs = [
-  ['atap.glb', buildAtap()],
-  ['atap_atang.glb', buildAtapAtang()],
-  ['atap_usei_sisi.glb', buildAtapUsei('atap_usei_sisi', 3.925)],   // x -15.35 … -7.5 (kiri), mirrored for kanan
-  ['atap_usei_tengah.glb', buildAtapUsei('atap_usei_tengah', 7.8)], // x ±7.8, over the tilong
+  ['atap/atap.glb', buildAtap()],
+  ['atap/atap_atang.glb', buildAtapAtang()],
+  ['atap/atap_usei_sisi.glb', buildAtapUsei('atap_usei_sisi', 3.925)],   // x -15.35 … -7.5 (kiri), mirrored for kanan
+  ['atap/atap_usei_tengah.glb', buildAtapUsei('atap_usei_tengah', 7.8)], // x ±7.8, over the tilong
+  ['props/patung.glb', buildPatung()],
 ];
 
 for (const [file, root] of outputs) {
-  const info = writeGLB(path.join(OUT, file), root);
-  console.log(`${path.relative(process.cwd(), path.join(OUT, file))}: ${info.nodes} nodes, ${info.meshes} meshes, ${info.bytes} bytes`);
+  const out = path.join(PARTS, file);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  const info = writeGLB(out, root);
+  console.log(`${path.relative(process.cwd(), out)}: ${info.nodes} nodes, ${info.meshes} meshes, ${info.bytes} bytes`);
 }

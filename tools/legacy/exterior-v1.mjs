@@ -5,10 +5,10 @@
 // Generates the exterior components of the Rumah Lamin (see docs/contract.md).
 import fs from 'node:fs';
 import path from 'node:path';
-import { MAT, box, boxFromMin, cylinder, collider, anchor, merge, group } from './lib/geom.mjs';
-import { writeGLB } from './lib/glb-writer.mjs';
+import { MAT, box, boxFromMin, cylinder, collider, anchor, merge, group } from '../lib/geom.mjs';
+import { writeGLB } from '../lib/glb-writer.mjs';
 
-const OUT = path.resolve(import.meta.dirname, '../parts/_legacy-exterior'); // never overwrite the real parts
+const OUT = path.resolve(import.meta.dirname, '../../parts/_legacy-exterior'); // never overwrite the real parts
 fs.mkdirSync(OUT, { recursive: true });
 const f2 = (n) => String(n).padStart(2, '0');
 

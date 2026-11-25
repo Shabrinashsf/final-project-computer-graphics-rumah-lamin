@@ -14,7 +14,8 @@
     "atap_atang": { "src": "atap/atap_atang.glb", "placeholder": true },
     "atap_usei_sisi": { "src": "atap/atap_usei_sisi.glb", "placeholder": true },
     "atap_usei_tengah": { "src": "atap/atap_usei_tengah.glb", "placeholder": true },
-    "tanah": { "src": "props/tanah.glb" }
+    "tanah": { "src": "props/tanah.glb" },
+    "patung": { "src": "props/patung.glb", "placeholder": true }
   },
   "instances": [
     { "id": "tanah", "component": "tanah" },
@@ -32,7 +33,9 @@
     { "id": "atap_atang", "component": "atap_atang", "attach": { "anchor": "anchor_base", "to": "rangka.anchor_atap_atang" } },
     { "id": "atap_usei_kiri", "component": "atap_usei_sisi", "attach": { "anchor": "anchor_base", "to": "rangka.anchor_atap_usei_kiri" } },
     { "id": "atap_usei_tengah", "component": "atap_usei_tengah", "attach": { "anchor": "anchor_base", "to": "rangka.anchor_atap_usei_tengah" } },
-    { "id": "atap_usei_kanan", "component": "atap_usei_sisi", "attach": { "anchor": "anchor_base", "to": "rangka.anchor_atap_usei_kanan" } }
+    { "id": "atap_usei_kanan", "component": "atap_usei_sisi", "attach": { "anchor": "anchor_base", "to": "rangka.anchor_atap_usei_kanan" } },
+    { "id": "patung_tangga_kiri", "component": "patung", "attach": { "anchor": "anchor_ground", "to": "tangga_kiri.anchor_patung_*" } },
+    { "id": "patung_tangga_kanan", "component": "patung", "attach": { "anchor": "anchor_ground", "to": "tangga_kanan.anchor_patung_*" } }
   ],
   "allowOverlap": [
     ["atap*", "atap*"],

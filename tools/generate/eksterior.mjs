@@ -6,11 +6,11 @@
 // Layout (world, deck top y 1.8): main body x ±15, z -10..0; atang x ±2.5, z -15..-10;
 // usei (veranda) z 0..7; two stairs at x = ±6.25, in front of the two doors.
 import path from 'node:path';
-import { MAT, boxFromMin, cylinder, collider, anchor, merge, group } from './lib/geom.mjs';
-import { wall } from './lib/walls.mjs';
-import { writeGLB } from './lib/glb-writer.mjs';
+import { MAT, boxFromMin, cylinder, collider, anchor, merge, group } from '../lib/geom.mjs';
+import { wall } from '../lib/walls.mjs';
+import { writeGLB } from '../lib/glb-writer.mjs';
 
-const OUT = path.resolve(import.meta.dirname, '../parts/eksterior');
+const OUT = path.resolve(import.meta.dirname, '../../parts/eksterior');
 const f2 = (n) => String(n).padStart(2, '0');
 
 export const STAIR_X = 6.25;       // stairs and doors at x = ±6.25, midway between deck pillars

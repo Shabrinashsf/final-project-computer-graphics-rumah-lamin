@@ -11,11 +11,11 @@
 //   atap_usei_kanan  : anchor_atap_usei_kanan (11.425, 0.2, 0.1)
 import path from 'node:path';
 import * as THREE from 'three';
-import { MAT, boxFromMin, cylinder, collider, anchor, merge, group, beam } from './lib/geom.mjs';
-import { wall } from './lib/walls.mjs';
-import { writeGLB } from './lib/glb-writer.mjs';
+import { MAT, boxFromMin, cylinder, collider, anchor, merge, group, beam } from '../lib/geom.mjs';
+import { wall } from '../lib/walls.mjs';
+import { writeGLB } from '../lib/glb-writer.mjs';
 
-const OUT = path.resolve(import.meta.dirname, '../parts/interior');
+const OUT = path.resolve(import.meta.dirname, '../../parts/interior');
 const H = 3.5;                          // wall height = floor to frame
 const TILE_DALAM = { u: 1.7, v: 2.25 };
 

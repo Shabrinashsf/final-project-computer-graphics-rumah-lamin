@@ -16,7 +16,7 @@ const EXPECTED = {
   eksterior: ['lantai', 'dinding_luar', 'pagar', 'tiang_usei', 'tangga_kiri', 'tangga_kanan'],
   interior: ['dinding_dalam', 'tiang_dalam', 'rangka'],
   atap: ['atap', 'atap_atang', 'atap_usei_kiri', 'atap_usei_tengah', 'atap_usei_kanan'],
-  props: ['tanah'],
+  props: ['tanah', 'patung_tangga_kiri_kiri', 'patung_tangga_kiri_kanan', 'patung_tangga_kanan_kiri', 'patung_tangga_kanan_kanan'],
 };
 
 test('models: one model per area, matching the team split', () => {
@@ -47,7 +47,7 @@ test('models: all areas together pass the assembly check', () => {
       instances.push({ id: i.id, component: i.id, matrix: i.matrix });
     }
   }
-  assert.equal(instances.length, 99);
+  assert.equal(instances.length, 103);
   const r = checkAssembly({ instances, parts, manifest });
   assert.deepEqual(r.groundErrors, []);
   assert.deepEqual(r.overlaps, []);

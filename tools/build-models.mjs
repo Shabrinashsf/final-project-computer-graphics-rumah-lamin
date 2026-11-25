@@ -5,6 +5,7 @@
 // extras { component, placeholder }. The area of a component is the folder of its src.
 import path from 'node:path';
 import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { readGLB } from './lib/glb-reader.mjs';
 import { mergeGLBs } from './lib/glb-merge.mjs';
 import { solveAssembly } from '../src/assembly/solve.js';
@@ -42,7 +43,8 @@ export function buildModels(outDir = MODEL_DIR, manifest = loadManifest()) {
   return results;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL: a plain `file://${argv[1]}` never matches on Windows (backslashes, drive letter).
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   for (const [area, r] of Object.entries(buildModels())) {
     console.log(`public/model/${area}.glb: ${r.instances} instances, ${r.meshes} meshes, ${r.bytes} bytes`);
   }
